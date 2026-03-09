@@ -13,13 +13,19 @@
 - [Fase 1: Botón "Limpiar Completadas"](#-fase-1-botón-limpiar-completadas)
 - [Fase 2: Sistema de Prioridades](#-fase-2-sistema-de-prioridades)
 - [Fase 3: Persistencia con localStorage](#-fase-3-persistencia-con-localstorage)
+- [Bloque Hooks: Lección asociada](#-bloque-hooks-lección-asociada)
+- [Fase 4: Custom hook useLocalStorage](#-fase-4-custom-hook-uselocalstorage)
+- [Fase 5: useDebounce y búsqueda de tareas](#-fase-5-usedebounce-y-búsqueda-de-tareas)
+- [Fase 6: useRef y useToggle](#-fase-6-useref-y-usetoggle)
+- [Fase 7: useMemo y useCallback (optimización)](#-fase-7-usememo-y-usecallback-optimización)
+- [Resumen de Conceptos por Fase](#-resumen-de-conceptos-por-fase)
 - [Recursos Adicionales](#-recursos-adicionales)
 
 ---
 
 ## 🎯 Visión General
 
-Este documento describe la implementación de **tres ejercicios progresivos** para una aplicación de gestión de tareas en React. Cada ejercicio introduce nuevos conceptos y patrones fundamentales de React.
+Este documento describe la implementación de **ejercicios progresivos** para una aplicación de gestión de tareas en React: **Fases 1–3** (fundamentos) y **Fases 4–7** (dominio de hooks), alineados con la lección **Dominio de hooks** (ruta en [Bloque Hooks](#-bloque-hooks-lección-asociada)).
 
 ### Objetivos de Aprendizaje Globales
 
@@ -29,6 +35,9 @@ Este documento describe la implementación de **tres ejercicios progresivos** pa
 4. **Renderizado condicional** y estilos dinámicos
 5. **Persistencia de datos** en el navegador
 6. **Patrones de inmutabilidad** en JavaScript
+7. **Custom hooks** reutilizables (`useLocalStorage`, `useDebounce`, `useToggle`)
+8. **useRef** para referencias al DOM y valores mutables
+9. **useMemo** y **useCallback** para optimización (con criterio)
 
 ### Prerrequisitos
 
@@ -41,17 +50,21 @@ Este documento describe la implementación de **tres ejercicios progresivos** pa
 
 ## 🧩 Conceptos React Cubiertos
 
-| Concepto                              | Fase 1 | Fase 2 | Fase 3 |
-| ------------------------------------- | ------ | ------ | ------ |
-| Virtual DOM (vDOM) - Fundamentos      | ✅     | ✅     | ✅     |
-| `useState` - Estado básico            | ✅     | ✅     | ✅     |
-| Actualización inmutable del estado    | ✅     | ✅     | ✅     |
-| Props y comunicación componente-padre | ✅     | ✅     | ✅     |
-| Renderizado condicional               | ✅     | ✅     | ✅     |
-| Estilos dinámicos con clases CSS      | -      | ✅     | -      |
-| `useEffect` - Efectos secundarios     | -      | -      | ✅     |
-| Sincronización con APIs externas      | -      | -      | ✅     |
-| Serialización JSON                    | -      | -      | ✅     |
+| Concepto                              | F1  | F2  | F3  | F4  | F5  | F6  | F7  |
+| ------------------------------------- | --- | --- | --- | --- | --- | --- | --- |
+| Virtual DOM (vDOM) - Fundamentos      | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  |
+| `useState` - Estado básico            | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  |
+| Actualización inmutable del estado    | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  |
+| Props y comunicación componente-padre | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  | ✅  |
+| Renderizado condicional               | ✅  | ✅  | ✅  | -   | ✅  | ✅  | -   |
+| Estilos dinámicos con clases CSS      | -   | ✅  | -   | -   | -   | -   | -   |
+| `useEffect` - Efectos secundarios     | -   | -   | ✅  | ✅  | ✅  | -   | -   |
+| Sincronización con APIs externas      | -   | -   | ✅  | ✅  | -   | -   | -   |
+| Serialización JSON                    | -   | -   | ✅  | ✅  | -   | -   | -   |
+| **Custom hooks**                      | -   | -   | -   | ✅  | ✅  | ✅  | -   |
+| `useRef`                              | -   | -   | -   | -   | -   | ✅  | -   |
+| `useMemo` / `useCallback`             | -   | -   | -   | -   | -   | -   | ✅  |
+| Cleanup en efectos                    | -   | -   | -   | -   | ✅  | -   | -   |
 
 ---
 
@@ -110,12 +123,12 @@ react-template/
 ```jsx
 // Estructura del estado en App.jsx
 const [tasks, setTasks] = useState([
-  {
-    id: 1,
-    text: "Aprender fundamentos de React",
-    completed: false,
-  },
-  // ...más tareas
+	{
+		id: 1,
+		text: 'Aprender fundamentos de React',
+		completed: false,
+	},
+	// ...más tareas
 ]);
 ```
 
@@ -157,9 +170,7 @@ Mostrar el botón solo cuando tiene sentido:
 
 ```jsx
 {
-  tasks.some((t) => t.completed) && (
-    <button onClick={clearCompleted}>Limpiar completadas</button>
-  );
+	tasks.some((t) => t.completed) && <button onClick={clearCompleted}>Limpiar completadas</button>;
 }
 ```
 
@@ -174,7 +185,7 @@ Mostrar el botón solo cuando tiene sentido:
 ```jsx
 // FUNCIÓN: Eliminar todas las tareas completadas
 const clearCompleted = () => {
-  setTasks(tasks.filter((task) => !task.completed));
+	setTasks(tasks.filter((task) => !task.completed));
 };
 ```
 
@@ -190,20 +201,19 @@ const clearCompleted = () => {
 
 ```jsx
 {
-  /* Botón para limpiar completadas (solo visible si hay alguna) */
+	/* Botón para limpiar completadas (solo visible si hay alguna) */
 }
 {
-  tasks.some((t) => t.completed) && (
-    <div className="mt-4 text-center">
-      <button
-        onClick={clearCompleted}
-        className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600
-                 transition-colors shadow-md hover:shadow-lg"
-      >
-        🗑️ Limpiar completadas
-      </button>
-    </div>
-  );
+	tasks.some((t) => t.completed) && (
+		<div className="mt-4 text-center">
+			<button
+				onClick={clearCompleted}
+				className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600
+                 transition-colors shadow-md hover:shadow-lg">
+				🗑️ Limpiar completadas
+			</button>
+		</div>
+	);
 }
 ```
 
@@ -225,25 +235,24 @@ En lugar de dejar el markup del botón directamente en `App.jsx`, podemos extrae
 Ejemplo de componente:
 
 ```jsx
-import React from "react";
+import React from 'react';
 
 // Componente presentacional para el botón "Limpiar completadas"
 // Props:
 // - count: número de tareas completadas (si es 0, no renderiza nada)
 // - onClear: función que ejecuta la limpieza
 function ClearCompletedButton({ count = 0, onClear }) {
-  if (!count) return null; // No mostrar si no hay completadas
+	if (!count) return null; // No mostrar si no hay completadas
 
-  return (
-    <div className="mt-4 text-center">
-      <button
-        onClick={onClear}
-        className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
-      >
-        🗑️ Limpiar {count} completada{count > 1 ? "s" : ""}
-      </button>
-    </div>
-  );
+	return (
+		<div className="mt-4 text-center">
+			<button
+				onClick={onClear}
+				className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg">
+				🗑️ Limpiar {count} completada{count > 1 ? 's' : ''}
+			</button>
+		</div>
+	);
 }
 
 export default ClearCompletedButton;
@@ -252,15 +261,12 @@ export default ClearCompletedButton;
 Ejemplo de uso en `App.jsx` (reemplaza el bloque del botón):
 
 ```jsx
-import ClearCompletedButton from "./components/ClearCompletedButton";
+import ClearCompletedButton from './components/ClearCompletedButton';
 
 // ...existing code...
 
 // Dentro del return, después de <TaskList />
-<ClearCompletedButton
-  count={tasks.filter((t) => t.completed).length}
-  onClear={clearCompleted}
-/>;
+<ClearCompletedButton count={tasks.filter((t) => t.completed).length} onClear={clearCompleted} />;
 
 // ...existing code...
 ```
@@ -276,9 +282,7 @@ Ventajas de extraer el componente:
 Añadir un contador de tareas completadas al botón:
 
 ```jsx
-<button onClick={clearCompleted}>
-  🗑️ Limpiar {tasks.filter((t) => t.completed).length} completadas
-</button>
+<button onClick={clearCompleted}>🗑️ Limpiar {tasks.filter((t) => t.completed).length} completadas</button>
 ```
 
 ### ✅ Criterios de Aceptación
@@ -374,18 +378,18 @@ className={priorityColors[task.priority]}
 
 ```jsx
 const [tasks, setTasks] = useState([
-  {
-    id: 1,
-    text: "Aprender fundamentos de React",
-    completed: false,
-    priority: "alta", // 🆕 Añadir prioridad
-  },
-  {
-    id: 2,
-    text: "Construir una app de tareas",
-    completed: false,
-    priority: "media", // 🆕
-  },
+	{
+		id: 1,
+		text: 'Aprender fundamentos de React',
+		completed: false,
+		priority: 'alta', // 🆕 Añadir prioridad
+	},
+	{
+		id: 2,
+		text: 'Construir una app de tareas',
+		completed: false,
+		priority: 'media', // 🆕
+	},
 ]);
 ```
 
@@ -395,13 +399,13 @@ Añadir una prioridad por defecto al crear tareas:
 
 ```jsx
 const addTask = (text) => {
-  const newTask = {
-    id: Date.now(),
-    text: text,
-    completed: false,
-    priority: "media", // 🆕 Prioridad por defecto
-  };
-  setTasks([...tasks, newTask]);
+	const newTask = {
+		id: Date.now(),
+		text: text,
+		completed: false,
+		priority: 'media', // 🆕 Prioridad por defecto
+	};
+	setTasks([...tasks, newTask]);
 };
 ```
 
@@ -410,62 +414,58 @@ const addTask = (text) => {
 **Actualización del componente:**
 
 ```jsx
-import { useState } from "react";
+import { useState } from 'react';
 
 function AddTaskInput({ onAdd }) {
-  const [input, setInput] = useState("");
-  const [priority, setPriority] = useState("media"); // 🆕 Estado para prioridad
+	const [input, setInput] = useState('');
+	const [priority, setPriority] = useState('media'); // 🆕 Estado para prioridad
 
-  const handleSubmit = () => {
-    if (input.trim()) {
-      onAdd(input, priority); // 🆕 Pasar la prioridad
-      setInput("");
-      setPriority("media"); // Reset a prioridad media
-    }
-  };
+	const handleSubmit = () => {
+		if (input.trim()) {
+			onAdd(input, priority); // 🆕 Pasar la prioridad
+			setInput('');
+			setPriority('media'); // Reset a prioridad media
+		}
+	};
 
-  return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-      <div className="flex gap-2 mb-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
-          placeholder="¿Qué necesitas hacer?"
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none
+	return (
+		<div className="bg-white rounded-lg shadow-md p-4 mb-6">
+			<div className="flex gap-2 mb-2">
+				<input
+					type="text"
+					value={input}
+					onChange={(e) => setInput(e.target.value)}
+					onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+					placeholder="¿Qué necesitas hacer?"
+					className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none
                      focus:ring-2 focus:ring-indigo-500"
-        />
-        <button
-          onClick={handleSubmit}
-          className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700
-                     transition-colors font-medium"
-        >
-          Añadir
-        </button>
-      </div>
+				/>
+				<button
+					onClick={handleSubmit}
+					className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700
+                     transition-colors font-medium">
+					Añadir
+				</button>
+			</div>
 
-      {/* 🆕 Selector de prioridad */}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-gray-600 font-medium">Prioridad:</span>
-        <div className="flex gap-2">
-          {["baja", "media", "alta"].map((p) => (
-            <button
-              key={p}
-              onClick={() => setPriority(p)}
-              className={`px-3 py-1 rounded-full transition-all ${
-                priority === p
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              {p.charAt(0).toUpperCase() + p.slice(1)}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+			{/* 🆕 Selector de prioridad */}
+			<div className="flex items-center gap-2 text-sm">
+				<span className="text-gray-600 font-medium">Prioridad:</span>
+				<div className="flex gap-2">
+					{['baja', 'media', 'alta'].map((p) => (
+						<button
+							key={p}
+							onClick={() => setPriority(p)}
+							className={`px-3 py-1 rounded-full transition-all ${
+								priority === p ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+							}`}>
+							{p.charAt(0).toUpperCase() + p.slice(1)}
+						</button>
+					))}
+				</div>
+			</div>
+		</div>
+	);
 }
 
 export default AddTaskInput;
@@ -482,14 +482,14 @@ export default AddTaskInput;
 Modificar la función `addTask`:
 
 ```jsx
-const addTask = (text, priority = "media") => {
-  const newTask = {
-    id: Date.now(),
-    text: text,
-    completed: false,
-    priority: priority, // 🆕 Usar la prioridad recibida
-  };
-  setTasks([...tasks, newTask]);
+const addTask = (text, priority = 'media') => {
+	const newTask = {
+		id: Date.now(),
+		text: text,
+		completed: false,
+		priority: priority, // 🆕 Usar la prioridad recibida
+	};
+	setTasks([...tasks, newTask]);
 };
 ```
 
@@ -499,62 +499,55 @@ Mostrar la prioridad con colores:
 
 ```jsx
 function TaskItem({ task, onRemove, onToggle }) {
-  // 🆕 Mapeo de prioridades a colores
-  const priorityStyles = {
-    baja: "border-l-4 border-green-500 bg-green-50",
-    media: "border-l-4 border-yellow-500 bg-yellow-50",
-    alta: "border-l-4 border-red-500 bg-red-50",
-  };
+	// 🆕 Mapeo de prioridades a colores
+	const priorityStyles = {
+		baja: 'border-l-4 border-green-500 bg-green-50',
+		media: 'border-l-4 border-yellow-500 bg-yellow-50',
+		alta: 'border-l-4 border-red-500 bg-red-50',
+	};
 
-  // 🆕 Iconos para cada prioridad
-  const priorityIcons = {
-    baja: "🟢",
-    media: "🟡",
-    alta: "🔴",
-  };
+	// 🆕 Iconos para cada prioridad
+	const priorityIcons = {
+		baja: '🟢',
+		media: '🟡',
+		alta: '🔴',
+	};
 
-  return (
-    <div
-      className={`rounded-lg shadow-sm p-4 flex items-center gap-3 hover:shadow-md
-                     transition-shadow ${priorityStyles[task.priority]}`}
-    >
-      <input
-        type="checkbox"
-        checked={task.completed}
-        onChange={() => onToggle(task.id)}
-        className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
-      />
+	return (
+		<div
+			className={`rounded-lg shadow-sm p-4 flex items-center gap-3 hover:shadow-md
+                     transition-shadow ${priorityStyles[task.priority]}`}>
+			<input
+				type="checkbox"
+				checked={task.completed}
+				onChange={() => onToggle(task.id)}
+				className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+			/>
 
-      <span className="text-xs">{priorityIcons[task.priority]}</span>
+			<span className="text-xs">{priorityIcons[task.priority]}</span>
 
-      <span
-        className={`flex-1 ${task.completed ? "line-through text-gray-400" : "text-gray-800"}`}
-      >
-        {task.text}
-      </span>
+			<span className={`flex-1 ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}>{task.text}</span>
 
-      {/* 🆕 Badge de prioridad */}
-      <span
-        className={`text-xs px-2 py-1 rounded-full font-medium ${
-          task.priority === "alta"
-            ? "bg-red-200 text-red-800"
-            : task.priority === "media"
-              ? "bg-yellow-200 text-yellow-800"
-              : "bg-green-200 text-green-800"
-        }`}
-      >
-        {task.priority}
-      </span>
+			{/* 🆕 Badge de prioridad */}
+			<span
+				className={`text-xs px-2 py-1 rounded-full font-medium ${
+					task.priority === 'alta'
+						? 'bg-red-200 text-red-800'
+						: task.priority === 'media'
+							? 'bg-yellow-200 text-yellow-800'
+							: 'bg-green-200 text-green-800'
+				}`}>
+				{task.priority}
+			</span>
 
-      <button
-        onClick={() => onRemove(task.id)}
-        className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600
-                   transition-colors"
-      >
-        Eliminar
-      </button>
-    </div>
-  );
+			<button
+				onClick={() => onRemove(task.id)}
+				className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600
+                   transition-colors">
+				Eliminar
+			</button>
+		</div>
+	);
 }
 
 export default TaskItem;
@@ -575,19 +568,17 @@ En `App.jsx`, ordenar antes de renderizar:
 // 🆕 Función helper para ordenar por prioridad
 const priorityOrder = { alta: 1, media: 2, baja: 3 };
 
-const sortedTasks = [...tasks].sort(
-  (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority],
-);
+const sortedTasks = [...tasks].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
 return (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-    {/* ... */}
-    <TaskList
-      tasks={sortedTasks} // 🆕 Pasar tareas ordenadas
-      onRemove={removeTask}
-      onToggle={toggleTask}
-    />
-  </div>
+	<div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+		{/* ... */}
+		<TaskList
+			tasks={sortedTasks} // 🆕 Pasar tareas ordenadas
+			onRemove={removeTask}
+			onToggle={toggleTask}
+		/>
+	</div>
 );
 ```
 
@@ -667,13 +658,13 @@ ENTREGABLE:
 
 ```jsx
 useEffect(() => {
-  // Código que se ejecuta después del render
-  console.log("Componente renderizado");
+	// Código que se ejecuta después del render
+	console.log('Componente renderizado');
 
-  // Opcionalmente, devolver función de limpieza
-  return () => {
-    console.log("Componente desmontado");
-  };
+	// Opcionalmente, devolver función de limpieza
+	return () => {
+		console.log('Componente desmontado');
+	};
 }, [dependencias]); // Array de dependencias
 ```
 
@@ -693,13 +684,13 @@ El navegador proporciona `localStorage` para guardar datos persistentes:
 
 ```javascript
 // Guardar
-localStorage.setItem("clave", "valor"); // Solo acepta strings
+localStorage.setItem('clave', 'valor'); // Solo acepta strings
 
 // Leer
-const valor = localStorage.getItem("clave"); // Devuelve string o null
+const valor = localStorage.getItem('clave'); // Devuelve string o null
 
 // Eliminar
-localStorage.removeItem("clave");
+localStorage.removeItem('clave');
 
 // Limpiar todo
 localStorage.clear();
@@ -709,10 +700,10 @@ localStorage.clear();
 
 ```javascript
 // Guardar objeto
-localStorage.setItem("tasks", JSON.stringify(tasks));
+localStorage.setItem('tasks', JSON.stringify(tasks));
 
 // Leer objeto
-const tasks = JSON.parse(localStorage.getItem("tasks"));
+const tasks = JSON.parse(localStorage.getItem('tasks'));
 ```
 
 ### 📋 Pasos de Implementación
@@ -722,44 +713,44 @@ const tasks = JSON.parse(localStorage.getItem("tasks"));
 **Ubicación:** En `App.jsx`, modificar el `useState`:
 
 ```jsx
-import { useState, useEffect } from "react"; // 🆕 Importar useEffect
+import { useState, useEffect } from 'react'; // 🆕 Importar useEffect
 
 function App() {
-  // 🆕 Función para obtener tareas iniciales
-  const getInitialTasks = () => {
-    try {
-      const savedTasks = localStorage.getItem("tasks");
+	// 🆕 Función para obtener tareas iniciales
+	const getInitialTasks = () => {
+		try {
+			const savedTasks = localStorage.getItem('tasks');
 
-      // Si hay tareas guardadas, parsearlas
-      if (savedTasks) {
-        return JSON.parse(savedTasks);
-      }
-    } catch (error) {
-      // Si hay error al parsear, usar tareas por defecto
-      console.error("Error al cargar tareas:", error);
-    }
+			// Si hay tareas guardadas, parsearlas
+			if (savedTasks) {
+				return JSON.parse(savedTasks);
+			}
+		} catch (error) {
+			// Si hay error al parsear, usar tareas por defecto
+			console.error('Error al cargar tareas:', error);
+		}
 
-    // Tareas por defecto si no hay nada guardado
-    return [
-      {
-        id: 1,
-        text: "Aprender fundamentos de React",
-        completed: false,
-        priority: "alta",
-      },
-      {
-        id: 2,
-        text: "Construir una app de tareas",
-        completed: false,
-        priority: "media",
-      },
-    ];
-  };
+		// Tareas por defecto si no hay nada guardado
+		return [
+			{
+				id: 1,
+				text: 'Aprender fundamentos de React',
+				completed: false,
+				priority: 'alta',
+			},
+			{
+				id: 2,
+				text: 'Construir una app de tareas',
+				completed: false,
+				priority: 'media',
+			},
+		];
+	};
 
-  // 🆕 Usar función lazy initialization
-  const [tasks, setTasks] = useState(getInitialTasks);
+	// 🆕 Usar función lazy initialization
+	const [tasks, setTasks] = useState(getInitialTasks);
 
-  // ... resto del código
+	// ... resto del código
 }
 ```
 
@@ -776,12 +767,12 @@ Añadir el `useEffect` después del `useState`:
 ```jsx
 // 🆕 EFECTO: Guardar tareas en localStorage cada vez que cambien
 useEffect(() => {
-  try {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-    console.log("✅ Tareas guardadas en localStorage:", tasks.length);
-  } catch (error) {
-    console.error("❌ Error al guardar tareas:", error);
-  }
+	try {
+		localStorage.setItem('tasks', JSON.stringify(tasks));
+		console.log('✅ Tareas guardadas en localStorage:', tasks.length);
+	} catch (error) {
+		console.error('❌ Error al guardar tareas:', error);
+	}
 }, [tasks]); // 🔑 Dependencia: se ejecuta cada vez que tasks cambie
 ```
 
@@ -792,91 +783,65 @@ useEffect(() => {
 - **Try-catch:** Maneja errores (ej: límite de almacenamiento excedido)
 - **Console.log:** Útil para debugging (opcional en producción)
 
-#### Paso 3.3: Añadir feedback visual de guardado (opcional)
+#### Paso 3.3: Componente de feedback visual de guardado (opcional)
 
-Mostrar un indicador temporal cuando se guarden las tareas:
+**Componentizar:** Crear un componente reutilizable que muestre un mensaje temporal de "guardado".
+
+- **Archivo:** `src/components/SavedIndicator.jsx`
+- **Props:** `show` (boolean), opcionalmente `message` (string) y `durationMs` (number).
+- **Comportamiento:** Si `show` es true, muestra el mensaje; el componente usa un `useEffect` interno que, cuando `show` pasa a true, programa un timeout para notificar que debe ocultarse (vía callback `onDismiss` o controlando la duración en el padre). Para mantener la lógica de cleanup en un solo sitio, el padre puede seguir usando un estado `savedIndicator` y el efecto de guardado que hace `setSavedIndicator(true)` y un `setTimeout(() => setSavedIndicator(false), 2000)` con cleanup; el componente solo se encarga de la presentación.
+
+**Ejemplo de uso en App:**
 
 ```jsx
-import { useState, useEffect } from "react";
+// En App: estado y efecto como en 3.2, más:
+const [savedIndicator, setSavedIndicator] = useState(false);
+useEffect(() => {
+	try {
+		localStorage.setItem('tasks', JSON.stringify(tasks));
+		setSavedIndicator(true);
+		const timer = setTimeout(() => setSavedIndicator(false), 2000);
+		return () => clearTimeout(timer);
+	} catch (e) {
+		console.error(e);
+	}
+}, [tasks]);
 
-function App() {
-  const [tasks, setTasks] = useState(getInitialTasks);
-  const [savedIndicator, setSavedIndicator] = useState(false); // 🆕
-
-  // Guardar en localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("tasks", JSON.stringify(tasks));
-
-      // 🆕 Mostrar indicador de guardado
-      setSavedIndicator(true);
-
-      // 🆕 Ocultar después de 2 segundos
-      const timer = setTimeout(() => {
-        setSavedIndicator(false);
-      }, 2000);
-
-      // 🆕 Cleanup: cancelar timer si el componente se desmonta
-      return () => clearTimeout(timer);
-    } catch (error) {
-      console.error("Error al guardar:", error);
-    }
-  }, [tasks]);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        {/* 🆕 Indicador de guardado */}
-        {savedIndicator && (
-          <div
-            className="mb-4 p-2 bg-green-100 border border-green-300 text-green-800
-                          rounded-lg text-center text-sm animate-pulse"
-          >
-            ✅ Cambios guardados automáticamente
-          </div>
-        )}
-
-        {/* ... resto del JSX */}
-      </div>
-    </div>
-  );
-}
+// En el JSX:
+<SavedIndicator show={savedIndicator} message="✅ Cambios guardados automáticamente" />;
 ```
 
-**Conceptos avanzados:**
+**Conceptos:**
 
-- **Segundo estado:** Para controlar la visibilidad del mensaje
-- **setTimeout:** Para ocultar el mensaje automáticamente
-- **Cleanup function:** `return () => clearTimeout(timer)` limpia el timer cuando el componente se desmonta o antes de ejecutar el efecto de nuevo
-- **animate-pulse:** Clase de Tailwind para animación
+- **Componente presentacional:** Solo muestra UI; la lógica (cuándo mostrar/ocultar) puede vivir en el padre o en el propio componente con un callback `onDismiss`.
+- **Cleanup:** El timer debe limpiarse en el efecto del padre (o dentro del componente si el timeout vive ahí).
 
-#### Paso 3.4: Añadir botón "Limpiar todo" con confirmación (opcional)
+#### Paso 3.4: Componente botón "Resetear aplicación" (opcional)
 
-Para pruebas, añadir un botón que borre localStorage:
+**Componentizar:** Crear un componente para el botón que borra localStorage y resetea las tareas, con confirmación.
+
+- **Archivo:** `src/components/ResetAppButton.jsx`
+- **Props:** `onReset` (función sin argumentos que el padre usa para borrar `localStorage` y llamar a `setTasks([])`), opcionalmente `confirmMessage` (string) y `label` (string).
+- **Comportamiento:** Al hacer clic, muestra `window.confirm(confirmMessage)`; si el usuario acepta, llama a `onReset()`. El padre es responsable de limpiar localStorage y actualizar el estado.
+
+**Ejemplo de uso en App:**
 
 ```jsx
-// 🆕 Función para resetear la aplicación
-const resetApp = () => {
-  if (
-    window.confirm(
-      "⚠️ ¿Seguro que quieres eliminar todas las tareas? Esta acción no se puede deshacer.",
-    )
-  ) {
-    localStorage.removeItem("tasks");
-    setTasks([]);
-  }
+const handleResetApp = () => {
+	if (window.confirm('⚠️ ¿Seguro que quieres eliminar todas las tareas? Esta acción no se puede deshacer.')) {
+		localStorage.removeItem('tasks');
+		setTasks([]);
+	}
 };
 
-// En el JSX, añadir al final:
-<div className="mt-4 text-center">
-  <button
-    onClick={resetApp}
-    className="text-sm text-gray-500 hover:text-red-600 underline"
-  >
-    🗑️ Resetear aplicación (borrar todo)
-  </button>
-</div>;
+// En el JSX:
+<ResetAppButton onReset={handleResetApp} />;
 ```
+
+**Ventajas de componentizar:**
+
+- **SavedIndicator:** Reutilizable en otras pantallas que persistan datos; pruebas más sencillas.
+- **ResetAppButton:** Encapsula el texto del botón y la confirmación; el padre solo proporciona la lógica de reset.
 
 ### ✅ Criterios de Aceptación
 
@@ -885,7 +850,8 @@ const resetApp = () => {
 - [ ] Al recargar la página (F5), las tareas persisten
 - [ ] Si no hay datos guardados, se muestran las tareas por defecto
 - [ ] No hay errores en consola relacionados con localStorage
-- [ ] (Opcional) Se muestra un indicador visual de guardado automático
+- [ ] (Opcional) Componente `SavedIndicator`: se muestra indicador visual de guardado automático
+- [ ] (Opcional) Componente `ResetAppButton`: botón de reset con confirmación
 
 ### 🧪 Casos de Prueba
 
@@ -932,8 +898,8 @@ REQUISITOS:
 2. Crear función getInitialTasks() para cargar tareas de localStorage al iniciar
 3. Implementar useEffect que guarde tasks en localStorage cada vez que cambien
 4. Manejar errores con try-catch
-5. (OPCIONAL) Añadir indicador visual de guardado automático
-6. (OPCIONAL) Implementar botón de reset con confirmación
+5. (OPCIONAL) Componentizar: crear SavedIndicator.jsx para el indicador visual de guardado
+6. (OPCIONAL) Componentizar: crear ResetAppButton.jsx para el botón de reset con confirmación
 
 FOCO PEDAGÓGICO:
 - Explicar qué es useEffect y por qué se necesita
@@ -957,17 +923,372 @@ ENTREGABLE:
 
 ---
 
+## 🪝 Bloque Hooks: Lección asociada
+
+Las **Fases 4–7** extienden la lista de tareas para practicar el contenido de la lección **Dominio de hooks**.
+
+| Recurso                       | En línea                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Lección: Dominio de hooks** | [lessons/es/react/react-hooks/](https://ruvebal.github.io/web-atelier-udit/lessons/es/react/react-hooks/)     |
+| **Plan (este doc)**           | [plan-ejercicios-react.md](https://github.com/ruvebal/react-template/blob/main/docs/plan-ejercicios-react.md) |
+
+### Objetivos del bloque (alineados con la lección)
+
+- Extraer lógica reutilizable en **custom hooks** (`useLocalStorage`, `useDebounce`, `useToggle`).
+- Usar **useRef** para acceso al DOM (focus del input) y valores que no disparan re-render.
+- Aplicar **useEffect** con **cleanup** (timers, suscripciones).
+- Introducir **useMemo** y **useCallback** con criterio (evitar optimización prematura).
+- Evitar pitfalls: closures obsoletos, bucles infinitos, dependencias incorrectas.
+
+### Orden recomendado
+
+1. Leer la lección (al menos secciones de custom hooks, useRef, useMemo/useCallback).
+2. Implementar Fase 4 → 5 → 6 → 7 sobre la app ya construida en Fases 1–3.
+
+---
+
+## 🗃️ Fase 4: Custom hook useLocalStorage
+
+### 🎓 Objetivos de aprendizaje
+
+- Extraer la persistencia en localStorage a un **custom hook** reutilizable.
+- Reutilizar el mismo patrón en otras partes de la app (p. ej. tema, preferencias).
+- Practicar **lazy initialization** y setter que persiste.
+
+### 🧠 Conceptos (lección asociada)
+
+- Custom hooks: reglas (solo en top-level y en componentes/hooks), convención `use*`.
+- Encapsular estado + efecto en un hook que devuelve `[value, setValue]`.
+
+### 📋 Pasos de implementación
+
+#### Paso 4.1: Crear `src/hooks/useLocalStorage.js`
+
+```jsx
+// hooks/useLocalStorage.js
+import { useState, useEffect } from 'react';
+
+/**
+ * Hook que sincroniza un valor con localStorage.
+ * @param {string} key - Clave en localStorage
+ * @param {T} initialValue - Valor si no hay nada guardado
+ * @returns {[T, (value: T | ((prev: T) => T)) => void]}
+ */
+export function useLocalStorage(key, initialValue) {
+	const [storedValue, setStoredValue] = useState(() => {
+		try {
+			const item = window.localStorage.getItem(key);
+			return item ? JSON.parse(item) : initialValue;
+		} catch (error) {
+			console.error(`Error reading localStorage key "${key}":`, error);
+			return initialValue;
+		}
+	});
+
+	const setValue = (value) => {
+		try {
+			const valueToStore = value instanceof Function ? value(storedValue) : value;
+			setStoredValue(valueToStore);
+			window.localStorage.setItem(key, JSON.stringify(valueToStore));
+		} catch (error) {
+			console.error(`Error setting localStorage key "${key}":`, error);
+		}
+	};
+
+	return [storedValue, setValue];
+}
+```
+
+#### Paso 4.2: Refactorizar `App.jsx`
+
+Sustituir el `useState` + `useEffect` de tareas por:
+
+```jsx
+const [tasks, setTasks] = useLocalStorage('tasks', [
+	{ id: 1, text: 'Aprender fundamentos de React', completed: false, priority: 'alta' },
+	{ id: 2, text: 'Construir una app de tareas', completed: false, priority: 'media' },
+]);
+```
+
+Eliminar `getInitialTasks` y el `useEffect` que guardaba en localStorage.
+
+### ✅ Criterios de aceptación
+
+- [ ] Existe `src/hooks/useLocalStorage.js` y se usa en `App.jsx`.
+- [ ] Las tareas siguen persistiendo al recargar.
+- [ ] No queda lógica duplicada de localStorage en `App.jsx`.
+
+### 📝 Prompt para implementación
+
+```
+Implementa la Fase 4 del plan ubicado en:
+/Users/ruvebal/projects/ruvebal/scholar/udit/courses-repos/react-template/docs/plan-ejercicios-react.md
+
+TAREA: Extraer la persistencia de tareas a un custom hook useLocalStorage.
+
+REQUISITOS:
+1. Crear src/hooks/useLocalStorage.js con la firma [value, setValue]
+2. Soporte inicialización perezosa y setter funcional
+3. Refactorizar App.jsx para usar useLocalStorage('tasks', initialTasks)
+4. Eliminar getInitialTasks y el useEffect de sincronización con localStorage
+
+LECCIÓN ASOCIADA:
+/Users/ruvebal/projects/ruvebal/scholar/udit/web-atelier-udit/web-foundations/docs/lessons/es/react/react-hooks/index.md
+
+ENTREGABLE:
+- Código del hook y cambios en App.jsx
+- Reporte indicando la ruta del plan y que la persistencia sigue funcionando
+```
+
+---
+
+## 🔍 Fase 5: useDebounce y búsqueda de tareas
+
+### 🎓 Objetivos de aprendizaje
+
+- Implementar un custom hook **useDebounce** para retrasar actualizaciones (búsqueda).
+- Practicar **useEffect** con **cleanup** (clearTimeout).
+- Filtrar la lista de tareas por texto sin disparar un filtrado en cada tecla.
+
+### ¿Qué es “debounce” y por qué useDebounce?
+
+La palabra viene de la electrónica: un interruptor mecánico **rebota** (_bounce_) al pulsarlo — hace y deshace contacto varias veces en milisegundos. **Debounce** es el proceso de ignorar esos rebotes y considerar solo el estado final, estable. En programación se usa la misma idea: muchos eventos seguidos (teclas, clics) se tratan como “ruido”; esperamos a que **se calme** y entonces actuamos una sola vez.
+
+Sin debounce, el valor del input de búsqueda cambia **en cada tecla**. Si filtraras la lista con ese valor, el filtrado se ejecutaría decenas de veces por palabra (una por "r", otra por "re", otra por "rea"…). Es innecesario y puede notarse como lag.
+
+**En la práctica:** _“Espera a que el usuario deje de escribir durante X ms; solo entonces usa el valor actual.”_ Así, al escribir "react", el valor con el que filtras no se actualiza en cada letra, sino **una vez** unos 300 ms después de dejar de teclear. El filtrado (o una petición al servidor) corre muchas menos veces.
+
+En resumen: **useDebounce** recibe un valor que cambia a menudo (p. ej. el texto del input) y devuelve una versión que solo se actualiza cuando ese valor lleva un rato estable — el patrón adecuado para búsquedas y filtros en tiempo real.
+
+### 🧠 Conceptos (lección asociada)
+
+- useDebounce: valor que se actualiza solo tras `delay` ms sin cambios.
+- Cleanup: devolver una función desde useEffect que cancele el timer.
+
+### 📋 Pasos de implementación
+
+#### Paso 5.1: Crear `src/hooks/useDebounce.js`
+
+```jsx
+// hooks/useDebounce.js
+import { useState, useEffect } from 'react';
+
+export function useDebounce(value, delay = 300) {
+	const [debouncedValue, setDebouncedValue] = useState(value);
+
+	useEffect(() => {
+		const handler = setTimeout(() => {
+			setDebouncedValue(value);
+		}, delay);
+
+		return () => clearTimeout(handler);
+	}, [value, delay]);
+
+	return debouncedValue;
+}
+```
+
+#### Paso 5.2: Añadir búsqueda en la UI
+
+- En `App.jsx`: estado `searchTerm` y `debouncedSearch = useDebounce(searchTerm, 300)`.
+- Calcular `filteredTasks` (o `visibleTasks`) con el filtro por `debouncedSearch` y pasar esa lista a `<TaskList>` (no `tasks`).
+- **Componente de búsqueda:** Crear `SearchTasksInput` en `src/components/SearchTasksInput.jsx`: input controlado que recibe `value` y `onChange` (el padre pasa `searchTerm` y `setSearchTerm`). Incluir placeholder "Buscar tareas..." y `aria-label` para accesibilidad.
+- En `App.jsx`: renderizar `<SearchTasksInput value={searchTerm} onChange={setSearchTerm} />` **solo cuando existan más de una tarea** (`tasks.length > 1`). Con cero o una tarea, filtrar no tiene sentido.
+- Nota pedagógica: igual que con "Ocultar completadas", la barra de búsqueda solo tiene sentido cuando hay varias tareas que filtrar; con una sola (o ninguna) no se muestra para evitar ruido visual y comunicar que la UI reacciona a los datos.
+
+### ✅ Criterios de aceptación
+
+- [ ] Existe `useDebounce` y se usa en la búsqueda.
+- [ ] El filtrado no se ejecuta en cada tecla sino tras dejar de escribir ~300 ms.
+- [ ] El efecto hace cleanup con `clearTimeout`.
+
+### 📝 Prompt para implementación
+
+```
+Implementa la Fase 5 del plan ubicado en:
+/Users/ruvebal/projects/ruvebal/scholar/udit/courses-repos/react-template/docs/plan-ejercicios-react.md
+
+TAREA: Añadir búsqueda de tareas con useDebounce.
+
+REQUISITOS:
+1. Crear src/hooks/useDebounce.js con cleanup (clearTimeout en el return del useEffect)
+2. En App.jsx: estado searchTerm, debouncedSearch = useDebounce(searchTerm, 300)
+3. Filtrar tareas por debouncedSearch y pasar lista filtrada a TaskList
+4. Crear componente SearchTasksInput (value, onChange) y usarlo en App **solo si hay más de una tarea** (tasks.length > 1); con 0 o 1 no hace falta.
+
+LECCIÓN ASOCIADA:
+/Users/ruvebal/projects/ruvebal/scholar/udit/web-atelier-udit/web-foundations/docs/lessons/es/react/react-hooks/index.md
+
+ENTREGABLE:
+- Código del hook useDebounce, componente SearchTasksInput y cambios en App.jsx
+- Reporte indicando la ruta del plan y evidencia del cleanup en useEffect
+```
+
+---
+
+## 🎚️ Fase 6: useRef y useToggle
+
+### 🎓 Objetivos de aprendizaje
+
+- Usar **useRef** para referenciar el input de añadir tarea y darle **focus** tras añadir.
+- Implementar **useToggle** (o equivalente) para alternar "mostrar/ocultar tareas completadas".
+- Evitar re-renders innecesarios con refs (la ref no dispara render al cambiar).
+
+### 🧠 Conceptos (lección asociada)
+
+- useRef: referencia mutable que persiste entre renders; acceso al DOM con `ref={inputRef}`.
+- Custom hook useToggle: `[on, toggle, setTrue, setFalse]` para booleanos reutilizables.
+
+### 📋 Pasos de implementación
+
+#### Paso 6.1: useRef para focus
+
+- Crear `inputRef = useRef(null)` en el componente que contiene el input de nueva tarea (p. ej. `AddTaskInput` o `App`).
+- Tras llamar a `onAdd(...)`, ejecutar `inputRef.current?.focus()`.
+- Pasar `ref={inputRef}` al `<input>` de la tarea.
+
+#### Paso 6.2: useToggle para "Ocultar completadas"
+
+- Crear `src/hooks/useToggle.js`: estado booleano + funciones `toggle`, `setTrue`, `setFalse`.
+- En `App.jsx`: `const [hideCompleted, toggleHideCompleted] = useToggle(false)`.
+- Filtrar (o ocultar visualmente) las tareas completadas cuando `hideCompleted === true`.
+- Nota pedagógica: este patrón introduce la idea de que **la UI debe reaccionar a los datos**. Si no hay tareas completadas, el toggle desaparece porque no tiene efecto; cuando aparecen completadas, la opción de ocultarlas se hace visible.
+
+#### Paso 6.3: Componente HideCompletedCheckbox
+
+- Crear `src/components/HideCompletedCheckbox.jsx`: componente presentacional que recibe `checked`, `onChange` y opcionalmente `label`.
+- Renderiza un checkbox con su etiqueta ("Ocultar tareas completadas"); el padre controla el estado con useToggle y pasa `checked={hideCompleted}` y `onChange={toggleHideCompleted}`.
+- Mostrarlo **solo cuando exista al menos una tarea completada** (`hasCompletedTasks && <HideCompletedCheckbox ... />`), para que la UI no ofrezca una acción sin efecto.
+
+### ✅ Criterios de aceptación
+
+- [ ] Tras añadir una tarea, el foco vuelve al input de texto.
+- [ ] Existe useToggle y controla la visibilidad de tareas completadas.
+- [ ] Existe el componente HideCompletedCheckbox y se usa en App con checked/onChange.
+- [ ] La ref no causa re-renders al usarla solo para focus.
+
+### 📝 Prompt para implementación
+
+```
+Implementa la Fase 6 del plan ubicado en:
+/Users/ruvebal/projects/ruvebal/scholar/udit/courses-repos/react-template/docs/plan-ejercicios-react.md
+
+TAREA: useRef para focus en el input de nueva tarea y useToggle para ocultar completadas.
+
+REQUISITOS:
+1. useRef: después de añadir tarea, hacer focus en el input (inputRef.current?.focus())
+2. Crear useToggle(initial) → [value, toggle, setTrue, setFalse]
+3. Crear componente HideCompletedCheckbox (checked, onChange, label opcional) y usarlo en App
+4. Aplicar filtro (no eliminar del estado) cuando hideCompleted es true
+
+LECCIÓN ASOCIADA:
+/Users/ruvebal/projects/ruvebal/scholar/udit/web-atelier-udit/web-foundations/docs/lessons/es/react/react-hooks/index.md
+
+ENTREGABLE:
+- Código de useToggle, HideCompletedCheckbox.jsx, cambios en App.jsx y AddTaskInput (ref)
+- Reporte indicando la ruta del plan
+```
+
+---
+
+## ⚡ Fase 7: useMemo y useCallback (optimización)
+
+### 🎓 Objetivos de aprendizaje
+
+- Saber **cuándo** tiene sentido memoizar (listas filtradas/ordenadas costosas o callbacks en listas grandes).
+- Implementar **useMemo** para la lista filtrada/ordenada de tareas.
+- Implementar **useCallback** para handlers pasados a hijos (p. ej. `onToggle`, `onRemove`) si se observan re-renders innecesarios.
+- **No** abusar: documentar por qué se añade cada memoización.
+
+### 🧠 Conceptos (lección asociada)
+
+- useMemo: recalcular solo cuando cambian dependencias; evitar cálculos pesados en cada render.
+- useCallback: estabilizar la referencia de una función para no romper memoización de hijos (React.memo).
+- Optimización prematura: medir antes; memoizar cuando hay problema real de rendimiento.
+
+### 📋 Pasos de implementación
+
+#### Paso 7.1: useMemo para lista visible
+
+**Beneficio arquitectónico de useMemo frente a cálculo en cada render**
+
+- **Sin useMemo:** En cada render de `App` (p. ej. al cambiar `savedIndicator`, `searchTerm`, etc.) se vuelve a ejecutar el filtrado y orden. El resultado es correcto pero se recalcula siempre.
+- **Con useMemo:** La lista derivada solo se recalcula cuando cambian `tasks`, `hideCompleted` o `debouncedSearch`. Si el padre re-renderiza por otro motivo (otro estado), React reutiliza el valor memoizado y no vuelve a ejecutar el callback. Además, la **referencia** del array es estable mientras las dependencias no cambien, lo que ayuda si `TaskList` o sus hijos usaran `React.memo`.
+
+**¿Es lo mismo useCallback?** No. `useMemo` memoiza un **valor** (aquí, el array de tareas visibles). `useCallback` memoiza una **función** (p. ej. `onToggle`, `onRemove`). Se usa useCallback cuando pasas callbacks a hijos memoizados: si el callback cambiara en cada render, el hijo se re-renderizaría igual. En esta app, si los ítems no están envueltos en `React.memo`, useCallback no aporta beneficio.
+
+**¿Tiene sentido en esta app?** Con pocas tareas, filtrar y ordenar es barato; la ganancia de useMemo aquí es **pequeña**. Se introduce como patrón pedagógico: en listas largas o cálculos costosos, useMemo sí evita trabajo innecesario. Documentar en código por qué se usa ("lista derivada; evita recalcular en cada render cuando otras dependencias no han cambiado") evita optimización prematura sin contexto.
+
+- Si ya tienes filtros (búsqueda, ocultar completadas) y/o orden por prioridad, calcular la lista final con `useMemo`:
+
+```jsx
+const priorityOrder = { alta: 0, media: 1, baja: 2 };
+
+const visibleTasks = useMemo(() => {
+	let list = tasks;
+	if (hideCompleted) list = list.filter((t) => !t.completed);
+	if (debouncedSearch.trim()) {
+		const q = debouncedSearch.toLowerCase();
+		list = list.filter((t) => t.text.toLowerCase().includes(q));
+	}
+	return [...list].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+}, [tasks, hideCompleted, debouncedSearch]);
+```
+
+- Pasar `visibleTasks` a `<TaskList>`.
+
+#### Paso 7.2: useCallback (pedagógico: enseñar el par React.memo + useCallback)
+
+Vale la pena enseñar **useCallback** junto a **React.memo** para que el alumnado entienda el patrón completo: un hijo memoizado solo evita re-renders si las props no cambian; si el padre pasa funciones creadas en cada render (`onToggle`, `onRemove`), esas props son "nuevas" cada vez y el hijo se re-renderiza igual. useCallback devuelve la **misma referencia** de función mientras las dependencias no cambien.
+
+**Pasos recomendados:**
+
+1. **Envolver `TaskItem` en `React.memo`** (export default memo(TaskItem)). Sin esto, useCallback no tiene efecto visible: el hijo siempre re-renderiza.
+2. **Estabilizar los handlers en App con useCallback.** Para que la referencia sea estable, usar **actualizador funcional** en setState: `setTasks(prev => ...)` en lugar de `setTasks(tasks.filter(...))`. Así las dependencias de useCallback pueden ser `[]` y la función no cambia entre renders.
+3. **Comentar en código** por qué se usa: "useCallback aquí porque TaskItem está memoizado; referencia estable para no forzar re-render de todos los ítems cuando App actualiza por otro estado (p. ej. savedIndicator, searchTerm)".
+
+**Importante:** useCallback con `[]` no evita que **App** re-renderice (App sigue re-renderizándose cuando cambia tasks, searchTerm, savedIndicator, etc.). Lo que hace es devolver la **misma referencia** de función en cada render de App, de modo que los hijos memoizados (TaskItem) no vean un cambio en la prop y no se re-rendericen innecesariamente.
+
+**Resumen didáctico:** React.memo + useCallback (con actualizador funcional) = referencias estables de props → solo re-renderizan los ítems cuya tarea cambió. En esta app con pocas tareas el beneficio es pequeño; el objetivo es aprender el patrón para listas largas o componentes costosos.
+
+### ✅ Criterios de aceptación
+
+- [ ] La lista visible se calcula con useMemo y dependencias correctas.
+- [ ] TaskItem envuelto en React.memo; onToggle y onRemove definidos con useCallback y actualizador funcional en setTasks.
+- [ ] Comentarios en código que justifican React.memo y useCallback (evitar optimización prematura sin contexto).
+
+### 📝 Prompt para implementación
+
+```
+Implementa la Fase 7 del plan ubicado en:
+/Users/ruvebal/projects/ruvebal/scholar/udit/courses-repos/react-template/docs/plan-ejercicios-react.md
+
+TAREA: Añadir useMemo para la lista visible y useCallback para handlers (pedagógico: par React.memo + useCallback).
+
+REQUISITOS:
+1. useMemo para visibleTasks (filtros + orden) con dependencias [tasks, hideCompleted, debouncedSearch]
+2. React.memo en TaskItem; useCallback para removeTask y toggleTask en App usando actualizador funcional (setTasks(prev => ...)) para dependencias [] y referencia estable
+3. Comentar en código por qué se usa cada memoización (useMemo, useCallback, React.memo)
+
+LECCIÓN ASOCIADA:
+/Users/ruvebal/projects/ruvebal/scholar/udit/web-atelier-udit/web-foundations/docs/lessons/es/react/react-hooks/index.md
+
+ENTREGABLE:
+- Cambios en App.jsx (useMemo, useCallback) y TaskItem.jsx (React.memo)
+- Reporte indicando la ruta del plan y la justificación de cada hook de optimización
+```
+
+---
+
 ## 📊 Resumen de Conceptos por Fase
 
 ### Tabla Comparativa de Complejidad
 
-| Aspecto                     | Fase 1                  | Fase 2                               | Fase 3                        |
-| --------------------------- | ----------------------- | ------------------------------------ | ----------------------------- |
-| **Dificultad**              | ⭐⭐                    | ⭐⭐⭐                               | ⭐⭐⭐⭐                      |
-| **Líneas de código nuevas** | ~15                     | ~60                                  | ~30                           |
-| **Componentes afectados**   | 1 (App.jsx)             | 3 (App, AddTaskInput, TaskItem)      | 1 (App.jsx)                   |
-| **Conceptos nuevos**        | Renderizado condicional | Estilos dinámicos, múltiples estados | useEffect, APIs del navegador |
-| **Tiempo estimado**         | 15-20 min               | 30-40 min                            | 25-35 min                     |
+| Aspecto              | F1                   | F2                 | F3                      | F4          | F5                   | F6                | F7                   |
+| -------------------- | -------------------- | ------------------ | ----------------------- | ----------- | -------------------- | ----------------- | -------------------- |
+| **Dificultad**       | ⭐⭐                 | ⭐⭐⭐             | ⭐⭐⭐⭐                | ⭐⭐⭐      | ⭐⭐⭐               | ⭐⭐⭐            | ⭐⭐⭐⭐             |
+| **Conceptos nuevos** | Condicional, .filter | Prioridad, estilos | useEffect, localStorage | Custom hook | useDebounce, cleanup | useRef, useToggle | useMemo, useCallback |
+| **Tiempo estimado**  | 15-20 min            | 30-40 min          | 25-35 min               | 20-30 min   | 25-35 min            | 25-35 min         | 20-30 min            |
 
 ### Progresión Pedagógica
 
@@ -986,6 +1307,23 @@ Fase 2: Sistema de Prioridades
 Fase 3: Persistencia localStorage
 ├─ Introduce: useEffect, sincronización externa, serialización
 └─ Fundamento para: Llamadas API, bases de datos, estado global
+
+Bloque Hooks (lección: react-hooks/index.md)
+Fase 4: useLocalStorage
+├─ Custom hooks: encapsular estado + efecto
+└─ Reutilización en toda la app
+
+Fase 5: useDebounce + búsqueda
+├─ useEffect con cleanup (clearTimeout)
+└─ Patrón debounce para inputs
+
+Fase 6: useRef + useToggle
+├─ useRef: DOM (focus) y valores mutables
+└─ useToggle: booleano reutilizable
+
+Fase 7: useMemo + useCallback
+├─ Optimización con criterio
+└─ Evitar optimización prematura
 ```
 
 ---
@@ -997,8 +1335,12 @@ Fase 3: Persistencia localStorage
 - [Render and Commit](https://react.dev/learn/render-and-commit) — Ciclo de renderizado y vDOM
 - [useState Hook](https://react.dev/reference/react/useState)
 - [useEffect Hook](https://react.dev/reference/react/useEffect)
+- [useRef Hook](https://react.dev/reference/react/useRef)
+- [useMemo Hook](https://react.dev/reference/react/useMemo)
+- [useCallback Hook](https://react.dev/reference/react/useCallback)
 - [Renderizado Condicional](https://react.dev/learn/conditional-rendering)
 - [Renderizado de Listas](https://react.dev/learn/rendering-lists)
+- [Reusing Logic with Custom Hooks](https://react.dev/learn/reusing-logic-with-custom-hooks)
 
 ### MDN Web Docs
 
@@ -1012,15 +1354,20 @@ Fase 3: Persistencia localStorage
 - [Hover, Focus y otros estados](https://tailwindcss.com/docs/hover-focus-and-other-states)
 - [Animations](https://tailwindcss.com/docs/animation)
 
+### Lección: Dominio de hooks
+
+- **Ruta:** `/Users/ruvebal/projects/ruvebal/scholar/udit/web-atelier-udit/web-foundations/docs/lessons/es/react/react-hooks/index.md`
+- Incluye: useFetch, useLocalStorage, useDebounce, useToggle, buenas prácticas, preguntas críticas y metodología atelier.
+
 ### Patrones Avanzados (Próximos pasos)
 
-Después de completar estas 3 fases, puedes explorar:
+Después de completar las Fases 1–7, puedes explorar:
 
 1. **Context API** para estado global (evitar prop drilling)
 2. **useReducer** para lógica de estado compleja
-3. **Custom Hooks** para reutilizar lógica (ej: `useLocalStorage`)
+3. **useFetch** (lección hooks) para datos de API
 4. **React Query/SWR** para gestión de datos del servidor
-5. **Optimización de rendimiento** con `useMemo` y `useCallback`
+5. **Tests de hooks** (renderHook, act) como en la lección
 
 ---
 
@@ -1028,7 +1375,7 @@ Después de completar estas 3 fases, puedes explorar:
 
 ### Checklist de Completitud
 
-Al finalizar las 3 fases, deberías poder responder "Sí" a todas:
+Al finalizar las 7 fases, deberías poder responder "Sí" a todas:
 
 **Conocimientos:**
 
@@ -1040,6 +1387,10 @@ Al finalizar las 3 fases, deberías poder responder "Sí" a todas:
 - [ ] ¿Entiendo el propósito de `useEffect`?
 - [ ] ¿Puedo explicar qué es un "efecto secundario"?
 - [ ] ¿Sé cómo funciona el array de dependencias de `useEffect`?
+- [ ] ¿Puedo crear un custom hook que encapsule estado y efecto?
+- [ ] ¿Entiendo cuándo usar useRef (DOM vs valor mutable)?
+- [ ] ¿Sé cuándo tiene sentido useMemo/useCallback y cuándo es optimización prematura?
+- [ ] ¿Puedo implementar cleanup en useEffect (timers, abort)?
 
 **Habilidades:**
 
@@ -1047,6 +1398,8 @@ Al finalizar las 3 fases, deberías poder responder "Sí" a todas:
 - [ ] ¿Sé implementar estilos dinámicos con Tailwind?
 - [ ] ¿Puedo debuggear problemas de estado con React DevTools?
 - [ ] ¿Sé inspeccionar localStorage en las DevTools del navegador?
+- [ ] ¿Puedo refactorizar lógica a un custom hook y reutilizarla?
+- [ ] ¿Sé dar focus a un input con useRef tras una acción?
 
 ### Desafíos Adicionales (Para practicar más)
 
@@ -1109,22 +1462,26 @@ Después de implementar cada fase, documenta tu progreso con este formato:
 
 ## 🚀 Conclusión
 
-Este plan de ejercicios te guía desde conceptos básicos de manipulación de estado hasta técnicas avanzadas de sincronización con APIs externas. Cada fase construye sobre la anterior, reforzando los fundamentos de React:
+Este plan te guía en dos bloques: **Fases 1–3** (fundamentos) y **Fases 4–7** (dominio de hooks), alineado con la lección [Dominio de hooks](/Users/ruvebal/projects/ruvebal/scholar/udit/web-atelier-udit/web-foundations/docs/lessons/es/react/react-hooks/index.md). La lista de tareas crece en funcionalidad y en uso de hooks:
 
-- **Inmutabilidad** como principio fundamental
-- **Componentes** como unidades reutilizables
-- **Hooks** (`useState`, `useEffect`) para gestionar estado y efectos
-- **Interacción con el navegador** mediante APIs nativas
+- **Inmutabilidad** y vDOM como base
+- **useState** y **useEffect** para estado y efectos
+- **Custom hooks** (`useLocalStorage`, `useDebounce`, `useToggle`) para lógica reutilizable
+- **useRef** para DOM y valores que no disparan render
+- **useMemo** y **useCallback** con criterio, evitando optimización prematura
 
-Al completar estos ejercicios, tendrás una base sólida para construir aplicaciones React más complejas.
+Al completar las 7 fases, tendrás práctica directa con el contenido de la lección de hooks y una base sólida para estado global, APIs y tests de hooks.
 
 ---
 
 **Ruta de referencia del plan:**
 `/Users/ruvebal/projects/ruvebal/scholar/udit/courses-repos/react-template/docs/plan-ejercicios-react.md`
 
-**Proyecto relacionado:**
+**Lección React (fundamentos):**
 `/Users/ruvebal/projects/ruvebal/scholar/udit/web-atelier-udit/web-foundations/docs/lessons/es/react`
+
+**Lección Dominio de hooks (Fases 4–7):**
+`/Users/ruvebal/projects/ruvebal/scholar/udit/web-atelier-udit/web-foundations/docs/lessons/es/react/react-hooks/index.md`
 
 ---
 
