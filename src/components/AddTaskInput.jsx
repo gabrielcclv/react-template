@@ -26,7 +26,7 @@ function AddTaskInput({ onAdd }) {
 					type="text"
 					ref={inputRef}
 					value={input}
-					onChange((e) => setInput(e.target.value)}
+					onChange={(e) => setInput(e.target.value)}
 					onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
 					placeholder="¿Qué necesitas hacer hoy?"
 					className="flex-1 px-4 py-3 border-2 border-blue-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white dark:placeholder-slate-400 font-medium transition-all hover:border-blue-300"

@@ -16,21 +16,15 @@ function ResetAppButton({
   };
 
   return (
-    <m.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+    <m.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.95 }}
+      type="button"
+      onClick={handleClick}
+      className="w-full px-4 py-3 text-sm font-bold bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white rounded-xl shadow-lg transition-all hover:shadow-xl active:shadow-md"
     >
-      <m.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        type="button"
-        onClick={handleClick}
-        className="w-full px-4 py-3 text-sm font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 underline transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg"
-      >
-        {label}
-      </m.button>
-    </m.div>
+      {label}
+    </m.button>
   );
 }
 
