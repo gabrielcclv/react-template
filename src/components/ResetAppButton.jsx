@@ -2,10 +2,12 @@
  * Botón para resetear la aplicación (borrar todas las tareas de localStorage).
  * Pide confirmación antes de llamar a onReset.
  */
+import { m } from 'motion/react';
+
 function ResetAppButton({
   onReset,
   confirmMessage = "⚠️ ¿Seguro que quieres eliminar todas las tareas? Esta acción no se puede deshacer.",
-  label = "🗑️ Resetear aplicación (borrar todo)",
+  label = "🗑️ Resetear aplicación",
 }) {
   const handleClick = () => {
     if (window.confirm(confirmMessage)) {
@@ -14,15 +16,21 @@ function ResetAppButton({
   };
 
   return (
-    <div className="mt-4 text-center">
-      <button
+    <m.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <m.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         type="button"
         onClick={handleClick}
-        className="text-sm text-gray-500 hover:text-red-600 underline"
+        className="w-full px-4 py-3 text-sm font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 underline transition-colors hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg"
       >
         {label}
-      </button>
-    </div>
+      </m.button>
+    </m.div>
   );
 }
 

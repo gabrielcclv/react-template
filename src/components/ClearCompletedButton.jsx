@@ -1,21 +1,25 @@
-// import React from "react";
+import { m } from 'motion/react';
 
 // Componente presentacional para el botón "Limpiar completadas"
-// Props:
-// - count: número de tareas completadas (si es 0, no renderiza nada)
-// - onClear: función que ejecuta la limpieza
 function ClearCompletedButton({ count = 0, onClear }) {
-  if (!count) return null; // No mostrar si no hay completadas
+  if (!count) return null;
 
   return (
-    <div className="mt-4 text-center">
-      <button
+    <m.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.3 }}
+    >
+      <m.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={onClear}
-        className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
+        className="px-6 py-3 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95"
       >
-        🗑️ Limpiar {count} completada{count > 1 ? "s" : ""}
-      </button>
-    </div>
+        🗑️ Limpiar {count} completada{count > 1 ? 's' : ''}
+      </m.button>
+    </m.div>
   );
 }
 

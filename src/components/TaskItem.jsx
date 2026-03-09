@@ -1,67 +1,109 @@
-import { memo } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
+import { motion } from 'motion/react';
 
-/**
- * Un ítem de tarea. Envuelto en React.memo para que solo re-renderice cuando
- * cambien task, onRemoveTask u onToggleTask. Así, useCallback en el padre
- * (App) evita re-renders de todos los ítems cuando el padre actualiza por
- * otro estado (p. ej. savedIndicator, searchTerm). Ver Fase 7 del plan.
- */
-function TaskItem({ task, onRemoveTask, onToggleTask }) {
-  // 🆕 Mapeo de prioridades a colores
+function TaskItem({ task, onRemoveTask, onToggleTask, onEditTask }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(task.text);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      inputRef.current?.focus();
+    }
+  }, [isEditing]);
+
+  const handleSave = () => {
+    if (editText.trim() && editText !== task.text) {
+      onEditTask(task.id, editText.trim());
+    } else {
+      setEditText(task.text);
+    }
+    setIsEditing(false);
+  };
+
+  // 🆕 Añadidos colores para modo oscuro (dark:bg-... dark:border-...)
   const priorityStyles = {
-    baja: "border-l-4 border-green-500 bg-green-50",
-    media: "border-l-4 border-yellow-500 bg-yellow-50",
-    alta: "border-l-4 border-red-500 bg-red-50",
+    baja: "border-l-4 border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20",
+    media: "border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-900/20",
+    alta: "border-l-4 border-rose-500 bg-rose-50 dark:bg-rose-900/20",
   };
 
-  // 🆕 Iconos para cada prioridad
-  const priorityIcons = {
-    baja: "🟢",
-    media: "🟡",
-    alta: "🔴",
-  };
+  const priorityIcons = { baja: "🟢", media: "🟡", alta: "🔴" };
 
   return (
-    <div
-      className={`rounded-lg shadow-sm p-4 flex items-center gap-3 hover:shadow-md
-                     transition-shadow ${priorityStyles[task.priority]}`}
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 15, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+      whileHover={{ scale: 1.02, y: -2 }}
+      className={`rounded-xl shadow-sm p-4 flex items-center gap-3 transition-colors ${priorityStyles[task.priority]} dark:border-y-0 dark:border-r-0`}
     >
       <input
         type="checkbox"
         checked={task.completed}
         onChange={() => onToggleTask(task.id)}
-        className="w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+        aria-label={`Marcar ${task.text} como completada`}
+        className="w-5 h-5 text-indigo-600 rounded cursor-pointer focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:border-slate-600"
       />
 
-      <span className="text-xs">{priorityIcons[task.priority]}</span>
+      <span className="text-xs select-none">{priorityIcons[task.priority]}</span>
+
+      {isEditing ? (
+        <input
+          ref={inputRef}
+          value={editText}
+          onChange={(e) => setEditText(e.target.value)}
+          onBlur={handleSave}
+          onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+          className="flex-1 px-2 py-1 text-sm border-b-2 border-indigo-500 focus:outline-none bg-transparent dark:text-white"
+        />
+      ) : (
+        <span
+          onDoubleClick={() => setIsEditing(true)}
+          className={`flex-1 cursor-text transition-all ${
+              task.completed ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-800 dark:text-gray-100"
+          }`}
+          title="Doble clic para editar"
+        >
+          {task.text}
+        </span>
+      )}
 
       <span
-        className={`flex-1 ${task.completed ? "line-through text-gray-400" : "text-gray-800"}`}
-      >
-        {task.text}
-      </span>
-
-      {/* 🆕 Badge de prioridad */}
-      <span
-        className={`text-xs px-2 py-1 rounded-full font-medium ${
+        className={`text-[10px] uppercase tracking-wider px-2 py-1 rounded-full font-bold select-none shadow-sm ${
           task.priority === "alta"
-            ? "bg-red-200 text-red-800"
+            ? "bg-rose-200 text-rose-800 dark:bg-rose-800 dark:text-rose-100"
             : task.priority === "media"
-              ? "bg-yellow-200 text-yellow-800"
-              : "bg-green-200 text-green-800"
+              ? "bg-amber-200 text-amber-800 dark:bg-amber-800 dark:text-amber-100"
+              : "bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-100"
         }`}
       >
         {task.priority}
       </span>
 
-      <button
+      {!isEditing && (
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsEditing(true)}
+          aria-label="Editar tarea"
+          className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-full transition-colors"
+          title="Editar tarea"
+        >
+          ✏️
+        </motion.button>
+      )}
+
+      <motion.button
+        whileTap={{ scale: 0.9 }}
         onClick={() => onRemoveTask(task.id)}
-        className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600
-                   transition-colors"
+        aria-label="Eliminar tarea"
+        className="p-2 text-rose-500 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full transition-colors"
+        title="Eliminar tarea"
       >
-        Eliminar
-      </button>
-    </div>
+        🗑️
+      </motion.button>
+    </motion.div>
   );
 }
 

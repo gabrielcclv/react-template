@@ -20,23 +20,22 @@ function AddTaskInput({ onAdd }) {
 	};
 
 	return (
-		<div className="bg-white rounded-lg shadow-md p-4 mb-6">
-			<div className="flex gap-2 mb-2">
+		<div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-800 rounded-xl p-5 space-y-4 shadow-lg border border-blue-200 dark:border-slate-600">
+			<div className="flex gap-2">
 				<input
 					type="text"
 					ref={inputRef}
 					value={input}
-					onChange={(e) => setInput(e.target.value)}
+					onChange((e) => setInput(e.target.value)}
 					onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-					placeholder="¿Qué necesitas hacer?"
-					className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none
-                     focus:ring-2 focus:ring-indigo-500"
+					placeholder="¿Qué necesitas hacer hoy?"
+					className="flex-1 px-4 py-3 border-2 border-blue-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-700 dark:text-white dark:placeholder-slate-400 font-medium transition-all hover:border-blue-300"
 				/>
 				<button
 					onClick={handleSubmit}
-					className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700
-                     transition-colors font-medium">
-					Añadir
+					className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-bold shadow-lg hover:shadow-xl active:scale-95"
+				>
+					✨ Añadir
 				</button>
 			</div>
 
