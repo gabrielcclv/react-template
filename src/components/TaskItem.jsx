@@ -30,6 +30,18 @@ function TaskItem({ task, onRemoveTask, onToggleTask, onEditTask }) {
 
   const priorityIcons = { baja: "🟢", media: "🟡", alta: "🔴" };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr + 'T00:00:00');
+    return new Intl.DateTimeFormat('es-ES', { 
+      month: 'short', 
+      day: 'numeric',
+      weekday: 'short'
+    }).format(date);
+  };
+
+  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && !task.completed;
+
   return (
     <motion.div
       layout
@@ -59,15 +71,26 @@ function TaskItem({ task, onRemoveTask, onToggleTask, onEditTask }) {
           className="flex-1 px-2 py-1 text-sm border-b-2 border-indigo-500 focus:outline-none bg-transparent dark:text-white"
         />
       ) : (
-        <span
-          onDoubleClick={() => setIsEditing(true)}
-          className={`flex-1 cursor-text transition-all ${
-              task.completed ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-800 dark:text-gray-100"
-          }`}
-          title="Doble clic para editar"
-        >
-          {task.text}
-        </span>
+        <div className="flex-1">
+          <span
+            onDoubleClick={() => setIsEditing(true)}
+            className={`block cursor-text transition-all ${
+                task.completed ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-800 dark:text-gray-100"
+            }`}
+            title="Doble clic para editar"
+          >
+            {task.text}
+          </span>
+          {task.dueDate && (
+            <span className={`text-xs mt-1 px-2 py-1 rounded-full inline-block ${
+              isOverdue 
+                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-semibold' 
+                : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400'
+            }`}>
+              📅 {formatDate(task.dueDate)}
+            </span>
+          )}
+        </div>
       )}
 
       <span

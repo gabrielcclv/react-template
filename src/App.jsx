@@ -14,9 +14,9 @@ import useDebounce from './hooks/useDebounce';
 import { useLocalStorage } from './hooks/useLocalStorage';
 
 const INITIAL_TASKS = [
-	{ id: 1, text: 'Aprender fundamentos de React', completed: false, priority: 'alta' },
-	{ id: 2, text: 'Construir una app de tareas', completed: false, priority: 'media' },
-	{ id: 3, text: '¡Desplegar en Vercel con Motion!', completed: false, priority: 'baja' },
+	{ id: 1, text: 'Aprender fundamentos de React', completed: false, priority: 'alta', dueDate: new Date().toISOString().split('T')[0] },
+	{ id: 2, text: 'Construir una app de tareas', completed: false, priority: 'media', dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0] },
+	{ id: 3, text: '¡Desplegar en Vercel con Motion!', completed: false, priority: 'baja', dueDate: new Date(Date.now() + 172800000).toISOString().split('T')[0] },
 ];
 
 const PRIORITY_ORDER = { alta: 0, media: 1, baja: 2 };
@@ -46,7 +46,7 @@ function App() {
 		setSearchTerm('');
 	};
 
-	const addTask = (text, priority = 'media') => {
+	const addTask = (text, priority = 'media', dueDate = '') => {
 		const trimmedText = text.trim();
 		
 		if (tasks.some(t => t.text.toLowerCase() === trimmedText.toLowerCase())) {
@@ -60,6 +60,7 @@ function App() {
 			text: trimmedText,
 			completed: false,
 			priority: priority,
+			dueDate: dueDate || new Date().toISOString().split('T')[0],
 		};
 		setTasks((prev) => [...prev, newTask]);
 		setError('');
